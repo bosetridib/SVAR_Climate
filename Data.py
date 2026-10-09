@@ -123,7 +123,6 @@ climate_series.append(oni_melted)
 # ==========================================
 # 5. MERGE INTO SINGLE SVAR MATRIX
 # ==========================================
-print("Merging all series into a single monthly DateTime matrix...")
 
 # Concatenate all dataframes along the columns
 climate_dataset = pd.concat(climate_series, axis=1)
@@ -131,9 +130,12 @@ climate_dataset = pd.concat(climate_series, axis=1)
 # Trim to ensure we only have data within our exact requested window
 climate_dataset = climate_dataset.loc[f"{start_year}-01-01":f"{end_year}-12-31"]
 
-print("\nData acquisition complete. Head of the dataset:")
-print(climate_dataset.head())
+climate_dataset.apply(pd.Series.first_valid_index)
+climate_dataset.describe()
 
 # Export the final aligned time-series to CSV
-climate_dataset.to_csv("us_monthly_climate_dataset.csv")
-print("\nDataset successfully saved to 'us_monthly_climate_dataset.csv'")
+# climate_dataset.to_csv("us_monthly_climate_dataset.csv")
+# print("\nDataset successfully saved to 'us_monthly_climate_dataset.csv'")
+
+aci = pd.read_excel('ACI.xlsx', sheet_name='ACI Combined Monthly')
+aci.T
