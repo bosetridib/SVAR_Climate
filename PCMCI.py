@@ -29,7 +29,7 @@ clim = climate_dataset[['US_Precipitation_Inches', 'US_Palmer_Drought_Index', 'O
 clim = clim.loc[econ.index]
 
 y = pd.concat([econ, clim], axis=1)
-
+y = y.drop(columns=['INDPRO', 'PAYEMS', 'FEDFUNDS', 'ONI'])
 # y.plot(subplots=True); plt.show()
 
 T, N = y.shape
@@ -45,17 +45,18 @@ scaled_data = scaler.fit_transform(raw_data)
 dataframe = pp.DataFrame(data=scaled_data, var_names=var_names, data_type=np.zeros(scaled_data.shape, dtype=int))
 
 # Define the maximum lag to test (analogous to SVAR lag order 'p')
-tau_max = 4
+tau_max = 1
 pc_alpha = 0.05 # Significance level for the causal links
 
 test_ci = [
-    GPDC(significance='analytic'),
-    CMIknn(significance='shuffle_test', sig_samples=100, knn=50, shuffle_neighbors=8, transform='ranks'),
     #ParCorr(significance='analytic'),
     #ParCorrMult(significance='analytic'),
-    RobustParCorr(significance='analytic'),
-    RegressionCI(significance='analytic'),
-    CMIknnMixed(significance='shuffle_test', sig_samples=100, knn=50, shuffle_neighbors=8, transform='ranks')
+    #RobustParCorr(significance='analytic'),
+    #RegressionCI(significance='analytic'),
+    GPDC(significance='analytic'),
+    #GPDC(significance='shuffle_test'),
+    CMIknn(significance='shuffle_test', transform='ranks'),
+    # CMIknnMixed(significance='shuffle_test', sig_samples=100, knn=50, shuffle_neighbors=8, transform='ranks')
 ]
 
 results = {}
@@ -69,27 +70,27 @@ for test in test_ci:
     results[test.__class__.__name__] = pcmci.run_pcmciplus(tau_max=tau_max, pc_alpha=0.05)
 # End of the loop
 
-results_r = {}
-for test in test_ci:
-    print(test.__class__.__name__)
-    pcmci = RPCMCI(
-        dataframe=dataframe, 
-        cond_ind_test=test,
-        verbosity=2
-    )
-    results_r[test.__class__.__name__] = pcmci.run_rpcmci(tau_max=tau_max, num_regimes=2, max_transitions=10, pc_alpha=0.05)
-# End of the loop
+# results_r = {}
+# for test in test_ci:
+#     print(test.__class__.__name__)
+#     pcmci = RPCMCI(
+#         dataframe=dataframe, 
+#         cond_ind_test=test,
+#         verbosity=2
+#     )
+#     results_r[test.__class__.__name__] = pcmci.run_rpcmci(tau_max=tau_max, num_regimes=2, max_transitions=10, pc_alpha=0.05)
+# # End of the loop
 
-results_l = {}
-for test in test_ci:
-    print(test.__class__.__name__)
-    pcmci = LPCMCI(
-        dataframe=dataframe, 
-        cond_ind_test=test,
-        verbosity=2
-    )
-    results_l[test.__class__.__name__] = pcmci.run_lpcmci(tau_max=tau_max, pc_alpha=0.05)
-# End of the loop
+# results_l = {}
+# for test in test_ci:
+#     print(test.__class__.__name__)
+#     pcmci = LPCMCI(
+#         dataframe=dataframe, 
+#         cond_ind_test=test,
+#         verbosity=2
+#     )
+#     results_l[test.__class__.__name__] = pcmci.run_lpcmci(tau_max=tau_max, pc_alpha=0.05)
+# # End of the loop
 
 # ---------------------------------------------------------
 # 3. VISUALIZATION
@@ -102,6 +103,8 @@ for _ in results.keys():
         var_names=var_names,
         link_colorbar_label='cross-MCI',
         node_colorbar_label='auto-MCI'
+        #figsize=(10, 8),
+        #save_name='pcmci_results_{}.png'.format(_)
     )
     plt.show()
 #
@@ -109,10 +112,10 @@ for _ in results.keys():
 import pickle
 # Save the results to a file
 with open('pcmci_results.pkl', 'wb') as f:
-    pickle.dump([results, results_r], f)
+    pickle.dump([results], f)
 
 import pickle
 # Load the results from a file
 with open('pcmci_results.pkl', 'rb') as f:
-    results, results_r = pickle.load(f)
+    results = pickle.load(f)
 #####
