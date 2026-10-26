@@ -49,6 +49,15 @@ def check_stationarity(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(results).set_index("Variable")
 check_stationarity(y)
 
+from statsmodels.tsa.statespace.tools import companion_matrix
+from statsmodels.tsa.tsatools import lagmat
+p = 4
+
+z = lagmat(y, maxlag=p-1, trim='both', original='in', use_pandas=True)
+z_t1 = lagmat(y, maxlag=p, trim='both', original='ex', use_pandas=True)
+
+companion_matrix(y.values)
+
 
 T, N = y.shape
 raw_data = y.copy()
@@ -69,7 +78,7 @@ pc_alpha = 0.05 # Significance level for the causal links
 test_ci = [
     #ParCorr(significance='analytic'),
     #ParCorrMult(significance='analytic'),
-    RobustParCorr(significance='analytic'),
+    #RobustParCorr(significance='analytic'),
     #RegressionCI(significance='analytic'),
     GPDC(significance='analytic'),
     #GPDC(significance='shuffle_test'),
