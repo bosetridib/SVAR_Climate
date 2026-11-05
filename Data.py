@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # 1. FETCH ALL MACROECONOMIC SERIES FROM FRED VIA WEB.DATAREADER
 # ==============================================================================
 start_date = datetime.datetime(1950, 1, 1)
-end_date = datetime.datetime(2025, 9, 30)
+end_date = datetime.datetime(2026, 10, 31)
 
 # Combined list of FRED tickers for Idea 1 and Idea 2
 # Note: W875RX1 is FRED's ticker for Real Personal Income Less Transfers (RPI);
@@ -42,6 +42,8 @@ fred_tickers = [
 # 1. Fetch Seasonally Adjusted Monthly U.S. Macroeconomic Series from FRED
 macro = web.DataReader(fred_tickers, "fred", start=start_date, end=end_date)
 macro.index = macro.index.to_period("M").to_timestamp()
+# macro.apply(pd.Series.first_valid_index)
+# macro.notna().idxmin()
 
 # 4. Obtain Kilian (2009) Monthly Global Real Economic Activity Index (1968-2026)
 greai = pd.read_csv("https://kvasilopoulos.github.io/econdata/data/k2009.csv").set_index("date")
@@ -81,24 +83,6 @@ macro_df["a_t"] = macro["INDPRO"] / macro["PAYEMS"]
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ==============================================================================
 # 2. FETCH CLIMATE SERIES (IDEA 1 & IDEA 2)
 # ==============================================================================
@@ -110,14 +94,12 @@ pdsi_raw = pd.read_csv(f"{ncei_base}pmdi{ncei_params}", comment="#")
 zndx_raw = pd.read_csv(f"{ncei_base}zndx{ncei_params}", comment="#")
 
 # 1. Obtain NOAA GML Monthly Deseasonalized Atmospheric CO2 (Mauna Loa, 1958-2026)
-co2_url = "https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.csv"
-co2 = pd.read_csv(co2_url, comment="#")
-co2["day"] = 1
-co2 = pd.DataFrame(co2["deseasonalized"].values, index=pd.to_datetime(co2[["year", "month", "day"]]))
+co2 = pd.read_csv("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.csv", comment="#")
+co2 = pd.DataFrame(co2["deseasonalized"].values, index=pd.to_datetime(co2[["year", "month"]].assign(day=1)))
 co2.index = co2.index.to_period("M").to_timestamp()
 co2.columns = ["co2"]
 
-us_tavg = pd.read_csv("https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/national/time-series/110/tavg/1/0/1950-2026.csv?base_prd=true&begbaseyear=1991&endbaseyear=2020", comment="#")
+us_tavg = pd.read_csv("https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/national/time-series/110/tavg/1/0/1900-2026/data.csv?base_prd=true&begbaseyear=1901&endbaseyear=1980", comment="#")
 us_tavg["date"] = pd.to_datetime(us_tavg["Date"].astype(str), format="%Y%m")
 us_tavg = us_tavg.set_index("date")[["Departure from Average"]].rename(columns={"Departure from Average": "US_TAVG_ANOM"})
 
@@ -126,8 +108,7 @@ climate_df = pd.DataFrame({
     "ZNDX":        zndx_raw.set_index("Date")["Value"]
 })
 climate_df.index = pd.to_datetime(climate_df.index.astype(str), format="%Y%m").to_period("M").to_timestamp()
-climate_df = pd.concat([climate_df, co2, us_tavg], axis=1)
-climate_df = climate_df.loc[start_date:end_date]
+climate_df = pd.concat([climate_df, us_tavg, co2], axis=1)
 
 #.to_period("M").to_timestamp()
-#climate_df.plot(subplots=True); plt.show()
+#df_tavg_anomaly.plot(subplots=True); plt.show()
