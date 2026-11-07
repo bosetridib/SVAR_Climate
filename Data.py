@@ -36,7 +36,14 @@ fred_tickers = [
     "GS1",       # 1-Year Treasury Constant Maturity Rate (Idea 2)
     "WPSFD49207",
     "RPI",
-    "CE16OV"
+    "CE16OV",
+    "IPUTIL",
+    "DPCERA3M086SBEA",
+    "CUSR0000SA0L2",
+    "BAA",
+    "AAA",
+    "IPMANSICS",
+    "MANEMP"
 ]
 
 # 1. Fetch Seasonally Adjusted Monthly U.S. Macroeconomic Series from FRED
@@ -75,12 +82,12 @@ macro_df = pd.concat([macro, greai, epu, gz[['gz_spread','ebp']], jln], axis=1)
 #macro_df["ip"] = np.log(macro["INDPRO"])
 #macro_df["rpi_t"] = np.log(macro["W875RX1"])
 macro_df["a_t"] = macro["INDPRO"] / macro["PAYEMS"]
+macro_df["credit_spread"] = macro_df["BAA"] - macro_df["AAA"]
 #macro_df["p_t"] = np.log(macro["CPIAUCSL"])
 #macro_df["p_core_t"] = np.log(macro["CPILFESL"])
 #macro_df["p_e_t"] = np.log(macro["PPIENG"])
 #macro_df["oil_t"] = np.log(macro["WTISPLC"])
 #macro_df["i_t"] = macro["FEDFUNDS"]
-
 
 
 # ==============================================================================
@@ -90,8 +97,9 @@ macro_df["a_t"] = macro["INDPRO"] / macro["PAYEMS"]
 ncei_base = "https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/national/time-series/110/"
 ncei_params = "/1/0/1900-2026/data.csv"
 
-pdsi_raw = pd.read_csv(f"{ncei_base}pmdi{ncei_params}", comment="#")
+pmdi_raw = pd.read_csv(f"{ncei_base}pmdi{ncei_params}", comment="#")
 zndx_raw = pd.read_csv(f"{ncei_base}zndx{ncei_params}", comment="#")
+phdi_raw = pd.read_csv(f"{ncei_base}phdi{ncei_params}", comment="#")
 
 # 1. Obtain NOAA GML Monthly Deseasonalized Atmospheric CO2 (Mauna Loa, 1958-2026)
 co2 = pd.read_csv("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.csv", comment="#")
@@ -103,12 +111,17 @@ us_tavg = pd.read_csv("https://www.ncei.noaa.gov/access/monitoring/climate-at-a-
 us_tavg["date"] = pd.to_datetime(us_tavg["Date"].astype(str), format="%Y%m")
 us_tavg = us_tavg.set_index("date")[["Departure from Average"]].rename(columns={"Departure from Average": "US_TAVG_ANOM"})
 
+us_tmax = pd.read_csv("https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/national/time-series/110/tmax/1/0/1900-2026/data.csv?base_prd=true&begbaseyear=1901&endbaseyear=1980", comment="#")
+us_tmax["date"] = pd.to_datetime(us_tmax["Date"].astype(str), format="%Y%m")
+us_tmax = us_tmax.set_index("date")[["Departure from Average"]].rename(columns={"Departure from Average": "US_TMAX_ANOM"})
+
 climate_df = pd.DataFrame({
-    "PMDI":        pdsi_raw.set_index("Date")["Value"],
+    "PMDI":        pmdi_raw.set_index("Date")["Value"],
+    "PHDI":        phdi_raw.set_index("Date")["Value"],
     "ZNDX":        zndx_raw.set_index("Date")["Value"]
 })
 climate_df.index = pd.to_datetime(climate_df.index.astype(str), format="%Y%m").to_period("M").to_timestamp()
-climate_df = pd.concat([climate_df, us_tavg, co2], axis=1)
+climate_df = pd.concat([climate_df, us_tavg, us_tmax, co2], axis=1)
 
 #.to_period("M").to_timestamp()
 #df_tavg_anomaly.plot(subplots=True); plt.show()
