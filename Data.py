@@ -89,6 +89,7 @@ macro_df["credit_spread"] = macro_df["BAA"] - macro_df["AAA"]
 #macro_df["oil_t"] = np.log(macro["WTISPLC"])
 #macro_df["i_t"] = macro["FEDFUNDS"]
 
+macro_df.columns = [_.lower() for _ in macro_df.columns]
 
 # ==============================================================================
 # 2. FETCH CLIMATE SERIES (IDEA 1 & IDEA 2)
@@ -122,6 +123,8 @@ climate_df = pd.DataFrame({
 })
 climate_df.index = pd.to_datetime(climate_df.index.astype(str), format="%Y%m").to_period("M").to_timestamp()
 climate_df = pd.concat([climate_df, us_tavg, us_tmax, co2], axis=1)
+
+climate_df.columns = [_.lower() for _ in climate_df.columns]
 
 #.to_period("M").to_timestamp()
 #df_tavg_anomaly.plot(subplots=True); plt.show()
