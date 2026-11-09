@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from Data import macro_df, climate_df
+from Data import macro_df, climate_df, fred_macro_variables
 
 
 ys = pd.concat([
