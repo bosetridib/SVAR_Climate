@@ -253,7 +253,8 @@ macro_df = pd.concat([macro, greai, epu, gz[['gz_spread','ebp']], jln], axis=1)
 # Construct log-level transformations for Idea 1 (Nonstationary Levels)
 #macro_df["ip"] = np.log(macro["INDPRO"])
 #macro_df["rpi_t"] = np.log(macro["W875RX1"])
-macro_df["a_t"] = macro["INDPRO"] / macro["PAYEMS"]
+# macro_df["a_t"] = macro["INDPRO"] / macro["PAYEMS"]
+macro_df["labor_productivity"] = macro_df["IPMANSICS"] / (macro_df["MANEMP"] * macro_df["AWHMAN"])
 macro_df["credit_spread"] = macro_df["BAA"] - macro_df["AAA"]
 #macro_df["p_t"] = np.log(macro["CPIAUCSL"])
 #macro_df["p_core_t"] = np.log(macro["CPILFESL"])
